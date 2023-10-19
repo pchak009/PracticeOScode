@@ -146,6 +146,9 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  // Intialize numProcSysCalls.
+  p->numProcSysCalls = 0;
+
   return p;
 }
 
@@ -169,6 +172,7 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->numProcSysCalls = 0;
 }
 
 // Create a user page table for a given process, with no user memory,
@@ -680,4 +684,47 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+int totalNumberOfProcesses(void) {
+  struct proc *p;
+  int count = 0;
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if (p->state != UNUSED) {
+      count++;
+    }
+  }
+  return count;
+} 
+
+// Function to fill process information
+int fillProcInfo(uint64 addr) {
+    // Check for a valid address
+    if (addr == 0) {
+        return -1;
+    }
+
+    // Obtain the current process and its parent process ID
+    struct proc *currentProc = myproc();
+    int parentID = currentProc->parent->pid;
+
+    // Calculate the number of system calls by the process
+    int syscallCount = currentProc->numProcSysCalls - 1;
+
+    // Calculate process memory size in pages
+    int pageUsage = currentProc->sz / PGSIZE;
+    if (currentProc->sz % PGSIZE > 0) {
+        pageUsage++;
+    }
+
+    // Initialize the pinfo structure with obtained data
+    struct pinfo returnInfo = {parentID, syscallCount, pageUsage};
+
+    // Copy data from kernel to user mode variable
+    if (copyout(currentProc->pagetable, addr, (char*)&returnInfo, sizeof(returnInfo)) < 0) {
+        return -1;
+    }
+
+    // Return 0 on success
+    return 0;
 }

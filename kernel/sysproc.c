@@ -89,3 +89,36 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_sysinfo(void)
+{
+  int n;
+  argint(0, &n);
+  if(n == 0) {
+	return totalNumberOfProcesses();
+  } else if(n == 1) {
+	return countTotalSystemCalls() - 1;
+  } else if(n == 2) {
+	return calculateFreeMemoryPages();
+  } else {
+  return -1;
+  }
+}
+// Function to retrieve system process information.
+uint64 sys_procinfo(void)
+{
+  uint64 processInfoPointer;
+  // Extract the process information pointer from an argument.
+  argaddr(0, &processInfoPointer);
+
+  if (processInfoPointer == 0) {
+    // If the pointer is NULL, return -1 to indicate an error.
+    return -1;
+  }  
+  // Return 0 on success or -1 if fillProcInfo encounters an error.
+  return fillProcInfo(processInfoPointer);
+}
+
+
+
