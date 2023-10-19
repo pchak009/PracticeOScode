@@ -688,7 +688,7 @@ procdump(void)
 
 int totalNumberOfProcesses(void) {
   struct proc *p;
-  int count = 0;
+  int count = 0; // initialize count to 0
   for(p = proc; p < &proc[NPROC]; p++) {
     if (p->state != UNUSED) {
       count++;
